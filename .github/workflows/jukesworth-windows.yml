@@ -25,7 +25,7 @@ jobs:
       - name: Prepare
         shell: bash
         run: |
-          printf 'ENABLE_UPDATE_CHECK=0\nHIDE_DONATIONS=0\nRELEASE_CHANNEL=stable\n' > .env
+          printf 'ENABLE_UPDATE_CHECK=0\nHIDE_DONATIONS=0\nLASTFM_API_KEY=\nLASTFM_API_SECRET=\nRELEASE_CHANNEL=stable\n' > .env
           sed -i 's/%{{SPOTUBE_VERSION}}%/5.1.2/g; s/%{{SPOTUBE_VERSION_AS_NUMBER}}%/5,1,2,0/g' windows/runner/Runner.rc
           flutter pub get
           dart run build_runner build --delete-conflicting-outputs
