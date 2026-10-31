@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   windows:
-    runs-on: windows-latest
+    runs-on: windows-2022  # Flutter 3.35 does not know the newer Visual Studio on windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2.18.0
