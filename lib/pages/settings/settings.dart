@@ -1,3 +1,4 @@
+import 'package:spotube/modules/jukesworth/background.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Material, MaterialType;
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -51,6 +52,7 @@ class SettingsPage extends HookConsumerWidget {
                       const SettingsAccountSection(),
                       const SettingsLanguageRegionSection(),
                       const SettingsAppearanceSection(),
+                      const SettingsJukesworthSection(),
                       const SettingsPlaybackSection(),
                       const SettingsDownloadsSection(),
                       if (kIsDesktop) const SettingsDesktopSection(),

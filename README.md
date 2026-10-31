@@ -1,3 +1,24 @@
+# Jukesworth
+
+> **Unofficial personal fork of [Spotube](https://github.com/KRTirtho/spotube) by KRTirtho**, based on Spotube **v5.1.2** (the last Flutter release).
+> Not affiliated with, or endorsed by, Spotube or its authors. Please **do not** send Jukesworth support questions or bug reports to the upstream project.
+
+Licensed under the same license as upstream (see [LICENSE](LICENSE)); original copyright notices are unchanged.
+These modifications were made with AI assistance (Grok Bot).
+
+## Changes from Spotube 5.1.2
+- **Custom backgrounds**: a single image or a whole folder, with dim and blur controls, a rotation timer, shuffle, and a Next button.
+- **Source tester with fallback**: checks that a stream actually plays before using it and falls back to a backup source instead of skipping the track.
+- **Status dot** in the player: red = stopped, blue = checking, green = source verified.
+- **yt-dlp engine** as the default playback source (with a yt-dlp backup path).
+- New name and icon (Jukesworth).
+
+## Requirements
+- `libmpv` (e.g. Fedora: `mpv-libs`) for playback.
+- `yt-dlp` installed and **kept up to date**. If songs start failing, update yt-dlp first.
+
+---
+
 <div align="center">
   <img width="600" src="assets/branding/spotube_banner.png" alt="Spotube Logo">
 

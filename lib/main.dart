@@ -27,6 +27,7 @@ import 'package:spotube/hooks/configurators/use_fix_window_stretching.dart';
 import 'package:spotube/hooks/configurators/use_get_storage_perms.dart';
 import 'package:spotube/hooks/configurators/use_has_touch.dart';
 import 'package:spotube/models/database/database.dart';
+import 'package:spotube/modules/jukesworth/background.dart';
 import 'package:spotube/modules/settings/color_scheme_picker_dialog.dart';
 import 'package:spotube/provider/audio_player/audio_player_streams.dart';
 import 'package:spotube/provider/database/database.dart';
@@ -93,6 +94,7 @@ Future<void> main(List<String> rawArgs) async {
     }
 
     await KVStoreService.initialize();
+    JukesBackground.instance.load();
 
     if (kIsDesktop) {
       await windowManager.setPreventClose(true);
@@ -114,7 +116,7 @@ Future<void> main(List<String> rawArgs) async {
     final database = AppDatabase();
 
     if (kIsDesktop) {
-      await localNotifier.setup(appName: "Spotube");
+      await localNotifier.setup(appName: "Jukesworth");
       await WindowManagerTools.initialize();
     }
 
@@ -141,6 +143,14 @@ class Spotube extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    final jwBg = JukesBackground.instance;
+    useListenable(jwBg);
+    ColorScheme jwScheme(ColorScheme cs) => jwBg.active
+        ? cs.copyWith(
+            background: () => cs.background.withValues(alpha: jwBg.dim),
+            card: () => cs.card.withValues(alpha: (jwBg.dim + 0.15).clamp(0, 1)),
+          )
+        : cs;
     final themeMode =
         ref.watch(userPreferencesProvider.select((s) => s.themeMode));
     final locale = ref.watch(userPreferencesProvider.select((s) => s.locale));
@@ -191,7 +201,7 @@ class Spotube extends HookConsumerWidget {
       ],
       routerConfig: router.config(),
       debugShowCheckedModeBanner: false,
-      title: 'Spotube',
+      title: 'Jukesworth',
       builder: (context, child) {
         child = ScrollConfiguration(
           behavior: ScrollConfiguration.of(context).copyWith(
@@ -213,24 +223,24 @@ class Spotube extends HookConsumerWidget {
           );
         }
 
-        return child;
+        return JukesBackgroundLayer(child: child);
       },
       scaling: const AdaptiveScaling(1),
       theme: ThemeData(
         radius: .5,
         iconTheme: const IconThemeProperties(),
-        colorScheme:
+        colorScheme: jwScheme(
             colorSchemeMap[accentMaterialColor.name]?.call(ThemeMode.light) ??
-                LegacyColorSchemes.lightSlate(),
+                LegacyColorSchemes.lightSlate()),
         surfaceOpacity: .8,
         surfaceBlur: 10,
       ),
       darkTheme: ThemeData(
         radius: .5,
         iconTheme: const IconThemeProperties(),
-        colorScheme:
+        colorScheme: jwScheme(
             colorSchemeMap[accentMaterialColor.name]?.call(ThemeMode.dark) ??
-                LegacyColorSchemes.darkSlate(),
+                LegacyColorSchemes.darkSlate()),
         surfaceOpacity: .8,
         surfaceBlur: 10,
       ),

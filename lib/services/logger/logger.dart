@@ -101,7 +101,7 @@ class AppLogger {
     }
 
     if (kIsLinux) {
-      dir = join(_getXdgStateHome(), "spotube");
+      dir = join(_getXdgStateHome(), "jukesworth");
     }
 
     final file = File(join(dir, ".spotube_logs"));

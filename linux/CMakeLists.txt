@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(runner LANGUAGES CXX)
 
-set(BINARY_NAME "spotube")
-set(APPLICATION_ID "oss.krtirtho.spotube")
+set(BINARY_NAME "jukesworth")
+set(APPLICATION_ID "com.kingsworth.jukesworth")
 
 cmake_policy(SET CMP0063 NEW)
 

@@ -83,6 +83,9 @@ class IsolatedYoutubeExplode {
         }
       }
 
+      // Jukesworth: never let an exception escape the isolate (it used to
+      // crash the handler and leave the caller waiting forever).
+      try {
       // Run the requested method on YoutubeExplode
       var result = switch (methodName) {
         "search" => youtubeExplode.search
@@ -101,6 +104,9 @@ class IsolatedYoutubeExplode {
       };
 
       replyPort.send(await result);
+      } catch (e) {
+        replyPort.send(IsolateEngineError(e.runtimeType.toString(), e.toString()));
+      }
     });
   }
 
@@ -109,12 +115,19 @@ class IsolatedYoutubeExplode {
     final responsePort = ReceivePort();
 
     responsePort.listen((message) {
-      completer.complete(message as T);
+      if (message is IsolateEngineError) {
+        completer.completeError(message);
+      } else {
+        completer.complete(message as T);
+      }
       responsePort.close();
     });
 
     _sendPort.send([responsePort.sendPort, methodName, args]);
-    return completer.future;
+    return completer.future.timeout(const Duration(seconds: 45), onTimeout: () {
+      responsePort.close();
+      throw IsolateEngineError("TimeoutException", "YouTube $methodName timed out");
+    });
   }
 
   Future<List<Video>> search(
@@ -228,4 +241,14 @@ class YouTubeExplodeEngine implements YouTubeEngine {
   void dispose() {
     IsolatedYoutubeExplode.instance.dispose();
   }
+}
+
+
+/// Error forwarded from the YoutubeExplode isolate.
+class IsolateEngineError implements Exception {
+  final String type;
+  final String message;
+  IsolateEngineError(this.type, this.message);
+  @override
+  String toString() => "$type: $message";
 }

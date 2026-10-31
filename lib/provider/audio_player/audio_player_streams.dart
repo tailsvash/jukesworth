@@ -16,6 +16,7 @@ import 'package:spotube/provider/user_preferences/user_preferences_provider.dart
 import 'package:spotube/services/audio_player/audio_player.dart';
 import 'package:spotube/services/audio_services/audio_services.dart';
 import 'package:spotube/services/logger/logger.dart';
+import 'package:spotube/services/sourced_track/source_tester.dart';
 
 class AudioPlayerStreamListeners {
   final Ref ref;
@@ -162,12 +163,20 @@ class AudioPlayerStreamListeners {
         }
       } catch (e, stack) {
         AppLogger.reportError(e, stack);
+        SourceTester.log("next track (prefetch)",
+            "pre-resolve failed: ${e.toString().split('\n').first}");
       }
     });
   }
 
   StreamSubscription subscribeToPlayerError() {
-    return audioPlayer.errorStream.listen((event) {});
+    // Jukesworth: log every player-level error (these make mpv skip ahead).
+    return audioPlayer.errorStream.listen((event) {
+      final st = ref.read(audioPlayerProvider);
+      final cur = st.activeTrack?.name ?? "unknown track";
+      SourceTester.state.value = TesterState.failed;
+      SourceTester.log(cur, "SKIP: player error: $event");
+    });
   }
 }
 

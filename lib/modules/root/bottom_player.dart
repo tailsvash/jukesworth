@@ -1,3 +1,4 @@
+import 'package:spotube/modules/jukesworth/background.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -54,9 +55,14 @@ class BottomPlayer extends HookConsumerWidget {
     return SurfaceCard(
       borderRadius: BorderRadius.zero,
       surfaceBlur: context.theme.surfaceBlur,
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SourceTesterNotice(),
+          Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          const SourceTesterDot(),
           Expanded(
             child: PlayerTrackDetails(track: playlist.activeTrack),
           ),
@@ -126,6 +132,8 @@ class BottomPlayer extends HookConsumerWidget {
               )
             ],
           ),
+        ],
+      ),
         ],
       ),
     );

@@ -20,6 +20,7 @@ import 'package:spotube/provider/user_preferences/user_preferences_provider.dart
 import 'package:spotube/services/audio_player/audio_player.dart';
 import 'package:spotube/services/logger/logger.dart';
 import 'package:spotube/services/sourced_track/sourced_track.dart';
+import 'package:spotube/services/sourced_track/source_tester.dart';
 import 'package:spotube/utils/service_utils.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -37,6 +38,17 @@ String? get _randomUserAgent => _deviceClients
     .payload["context"]["client"]["userAgent"];
 
 class ServerPlaybackRoutes {
+  // Jukesworth: anything failing here makes the player skip; log it.
+  void _jwLog(String trackId, Object e) {
+    String name = trackId;
+    try {
+      name = playlist.tracks.firstWhere((t) => t.id == trackId).name;
+    } catch (_) {}
+    SourceTester.state.value = TesterState.failed;
+    SourceTester.log(name,
+        "SKIP: stream server error: ${e.toString().split('\n').first}");
+  }
+
   final Ref ref;
   UserPreferences get userPreferences => ref.read(userPreferencesProvider);
   AudioPlayerState get playlist => ref.read(audioPlayerProvider);
@@ -181,6 +193,8 @@ class ServerPlaybackRoutes {
       ),
     ).catchError((e, stack) async {
       AppLogger.reportError(e, stack);
+      SourceTester.log(track.query.name,
+          "player request to stream failed (${e.toString().split('\n').first}); refreshing");
 
       final sourcedTrack = await ref
           .read(sourcedTrackProvider(track.query).notifier)
@@ -280,6 +294,7 @@ class ServerPlaybackRoutes {
       final sourcedTrack = await _getSourcedTrack(request, trackId);
 
       if (sourcedTrack == null) {
+        _jwLog(trackId, "track not found in queue / could not be sourced");
         return Response.notFound("Track not found in the current queue");
       }
 
@@ -294,6 +309,7 @@ class ServerPlaybackRoutes {
       );
     } catch (e, stack) {
       AppLogger.reportError(e, stack);
+      _jwLog(trackId, e);
       return Response.internalServerError();
     }
   }
@@ -304,6 +320,7 @@ class ServerPlaybackRoutes {
       final sourcedTrack = await _getSourcedTrack(request, trackId);
 
       if (sourcedTrack == null) {
+        _jwLog(trackId, "track not found in queue / could not be sourced");
         return Response.notFound("Track not found in the current queue");
       }
 
@@ -328,6 +345,7 @@ class ServerPlaybackRoutes {
       );
     } catch (e, stack) {
       AppLogger.reportError(e, stack);
+      _jwLog(trackId, e);
       return Response.internalServerError();
     }
   }

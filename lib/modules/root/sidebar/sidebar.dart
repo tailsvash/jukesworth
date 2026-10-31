@@ -60,7 +60,7 @@ class Sidebar extends HookConsumerWidget {
                   letterSpacing: 1.8,
                   color: colorScheme.foreground,
                 ),
-                child: const Text("Spotube"),
+                child: const Text("Jukesworth"),
               )
             : const Text(""),
       ),

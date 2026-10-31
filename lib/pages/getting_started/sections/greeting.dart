@@ -19,7 +19,7 @@ class GettingStartedPageGreetingSection extends HookConsumerWidget {
           children: [
             Assets.branding.spotubeLogoPng.image(height: 200),
             const Gap(24),
-            const Text("Spotube").semiBold().h4(),
+            const Text("Jukesworth").semiBold().h4(),
             const Gap(4),
             Text(
               kIsMobile
