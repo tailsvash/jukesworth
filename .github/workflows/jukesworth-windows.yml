@@ -1,0 +1,57 @@
+name: Jukesworth Windows build
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to upload the zip to
+        default: v5.1.2-jw1
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2.18.0
+        with:
+          flutter-version: 3.35.2
+          channel: master
+          cache: true
+          git-source: https://github.com/flutter/flutter.git
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Prepare
+        shell: bash
+        run: |
+          printf 'ENABLE_UPDATE_CHECK=0\nHIDE_DONATIONS=0\nRELEASE_CHANNEL=stable\n' > .env
+          sed -i 's/%{{SPOTUBE_VERSION}}%/5.1.2/g; s/%{{SPOTUBE_VERSION_AS_NUMBER}}%/5,1,2,0/g' windows/runner/Runner.rc
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+      - name: Build
+        run: flutter build windows --release
+      - name: Package
+        shell: pwsh
+        run: |
+          $out = "build/windows/x64/runner/Release"
+          Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "$out/yt-dlp.exe"
+          Copy-Item LICENSE "$out/LICENSE.txt"
+          @"
+          Jukesworth for Windows - unofficial fork of Spotube (by KRTirtho), made with AI help.
+          Run jukesworth.exe. If Windows SmartScreen warns you, click 'More info' then 'Run anyway' (the app is unsigned).
+          yt-dlp.exe is included. To update it later, open a terminal in this folder and run:  .\yt-dlp.exe -U
+          "@ | Out-File -Encoding utf8 "$out/README.txt"
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Rename-Item $out jukesworth
+          Compress-Archive -Path build/windows/x64/runner/jukesworth -DestinationPath dist/jukesworth-5.1.2-jw1-windows-x86_64.zip
+          (Get-FileHash dist/jukesworth-5.1.2-jw1-windows-x86_64.zip -Algorithm SHA256).Hash.ToLower() + "  jukesworth-5.1.2-jw1-windows-x86_64.zip" | Out-File -Encoding ascii -NoNewline dist/jukesworth-5.1.2-jw1-windows-x86_64.zip.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: dist/*
+      - name: Upload to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ inputs.tag }}" dist/* --clobber

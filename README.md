@@ -6,6 +6,9 @@
 Licensed under the same license as upstream (see [LICENSE](LICENSE)); original copyright notices are unchanged.
 These modifications were made with AI assistance (Grok Bot).
 
+## Download
+**[Get the latest Jukesworth release (Linux & Windows)](https://github.com/tailsvash/jukesworth/releases/latest)** — install steps are in the release notes. Android isn't available yet.
+
 ## Changes from Spotube 5.1.2
 - **Custom backgrounds**: a single image or a whole folder, with dim and blur controls, a rotation timer, shuffle, and a Next button.
 - **Source tester with fallback**: checks that a stream actually plays before using it and falls back to a backup source instead of skipping the track.

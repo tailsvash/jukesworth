@@ -16,19 +16,28 @@ class YtDlpBackup {
   static String? _cached;
   static bool _looked = false;
 
-  /// Finds yt-dlp on PATH (plus common locations). null if not installed.
+  /// Public alias used at startup.
+  static String? findExecutable() => executable;
+
+  /// Finds yt-dlp next to the app, on PATH (plus common locations). null if not installed.
   static String? get executable {
     if (_looked) return _cached;
     _looked = true;
+    final win = Platform.isWindows;
+    final name = win ? "yt-dlp.exe" : "yt-dlp";
     final dirs = <String>[
-      ...(Platform.environment["PATH"] ?? "").split(":"),
-      "/usr/bin",
-      "/usr/local/bin",
-      p.join(Platform.environment["HOME"] ?? "", ".local", "bin"),
+      // bundled next to the app (Windows release zip ships yt-dlp.exe here)
+      p.dirname(Platform.resolvedExecutable),
+      ...(Platform.environment["PATH"] ?? "").split(win ? ";" : ":"),
+      if (!win) ...[
+        "/usr/bin",
+        "/usr/local/bin",
+        p.join(Platform.environment["HOME"] ?? "", ".local", "bin"),
+      ],
     ];
     for (final d in dirs) {
       if (d.isEmpty) continue;
-      final f = File(p.join(d, "yt-dlp"));
+      final f = File(p.join(d, name));
       if (f.existsSync()) return _cached = f.path;
     }
     return null;

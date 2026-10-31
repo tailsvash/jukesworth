@@ -16,6 +16,7 @@ import 'package:local_notifier/local_notifier.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:metadata_god/metadata_god.dart';
 import 'package:smtc_windows/smtc_windows.dart';
+import 'package:spotube/services/sourced_track/ytdlp_backup.dart';
 import 'package:spotube/collections/env.dart';
 import 'package:spotube/collections/http-override.dart';
 import 'package:spotube/collections/intents.dart';
@@ -101,6 +102,7 @@ Future<void> main(List<String> rawArgs) async {
       await YtDlp.instance
           .setBinaryLocation(
             KVStoreService.getYoutubeEnginePath(YoutubeClientEngine.ytDlp) ??
+                YtDlpBackup.findExecutable() ??
                 "yt-dlp${kIsWindows ? '.exe' : ''}",
           )
           .catchError((e, stack) => null);
