@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
@@ -102,7 +103,7 @@ class SourcedTrack extends BasicSourcedTrack {
     SourceTester.state.value = TesterState.checking;
     if (candidates.isEmpty) {
       SourceTester.log(query.name,
-          "no matches found on ${audioSourceConfig.slug}, trying yt-dlp");
+          "no matches found on ${audioSourceConfig.slug}${YtDlpBackup.available ? ", trying yt-dlp" : ""}");
       final y = await _ytDlpFallback(ref: ref, query: query, tried: const [],
           source: audioSourceConfig.slug);
       if (y != null) return y;
@@ -200,7 +201,7 @@ class SourcedTrack extends BasicSourcedTrack {
 
     if (fallbackUnverified != null) {
       SourceTester.log(query.name,
-          "no match passed the stream test (yt-dlp too); trying first one anyway");
+          "no match passed the stream test${YtDlpBackup.available ? " (yt-dlp too)" : ""}; trying first one anyway");
       SourceTester.state.value = TesterState.failed;
       return fallbackUnverified;
     }
@@ -234,7 +235,9 @@ class SourcedTrack extends BasicSourcedTrack {
     required String source,
   }) async {
     if (!YtDlpBackup.available) {
-      SourceTester.log(query.name, "yt-dlp backup not installed (not on PATH)");
+      if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+        SourceTester.log(query.name, "yt-dlp backup not installed (not on PATH)");
+      }
       return null;
     }
     SourceTester.state.value = TesterState.checking;

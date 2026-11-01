@@ -61,7 +61,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "oss.krtirtho.spotube"
+        applicationId "com.kingsworth.jukesworth" // Jukesworth: own ID so it installs next to Spotube
         minSdkVersion 24
         targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
@@ -83,7 +83,7 @@ android {
             signingConfig signingConfigs.release
         }
         debug {
-            signingConfig signingConfigs.release
+            signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
         }
     }
 
@@ -92,21 +92,21 @@ android {
     productFlavors {
         nightly {
             dimension "default"
-            resValue "string", "app_name_en", "Spotube Nightly"
+            resValue "string", "app_name_en", "Jukesworth Nightly"
             applicationIdSuffix ".nightly"
             versionNameSuffix "-nightly"
             signingConfig signingConfigs.release
         }
         dev {
             dimension "default"
-            resValue "string", "app_name_en", "Spotube Dev"
+            resValue "string", "app_name_en", "Jukesworth Dev"
             applicationIdSuffix ".dev"
             versionNameSuffix "-dev"
             signingConfig signingConfigs.release
         }
         stable {
             dimension "default"
-            resValue "string", "app_name_en", "Spotube"
+            resValue "string", "app_name_en", "Jukesworth"
             signingConfig signingConfigs.release
         }
     }

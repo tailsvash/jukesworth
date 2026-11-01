@@ -23,6 +23,10 @@ class YtDlpBackup {
   static String? get executable {
     if (_looked) return _cached;
     _looked = true;
+    // Jukesworth: yt-dlp is a desktop program; phones use the built-in sources.
+    if (!(Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
+      return null;
+    }
     final win = Platform.isWindows;
     final name = win ? "yt-dlp.exe" : "yt-dlp";
     final dirs = <String>[

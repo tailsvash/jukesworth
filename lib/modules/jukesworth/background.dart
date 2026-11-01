@@ -4,7 +4,10 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 
+import 'package:file_picker/file_picker.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/material.dart' as m;
 import 'package:path/path.dart' as p;
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -200,6 +203,55 @@ class SourceTesterNotice extends StatelessWidget {
   }
 }
 
+/// Jukesworth (Android/iOS): photo permission + pickers.
+class JukesMobilePicker {
+  /// READ_MEDIA_IMAGES on Android 13+, READ_EXTERNAL_STORAGE below.
+  static Future<bool> ensurePhotoPermission() async {
+    if (!Platform.isAndroid) return true;
+    final photos = await Permission.photos.request();
+    if (photos.isGranted || photos.isLimited) return true;
+    final storage = await Permission.storage.request();
+    return storage.isGranted || storage.isLimited;
+  }
+
+  /// Pick one or more images. They are copied into the app's own
+  /// "backgrounds" folder so they keep working, and that folder is used
+  /// (so several images cycle like a folder does on desktop).
+  static Future<String?> pickImages({required bool replace}) async {
+    final res = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: true,
+    );
+    if (res == null || res.files.isEmpty) return null;
+    final base = await getApplicationSupportDirectory();
+    final dir = Directory(p.join(base.path, "backgrounds"));
+    if (replace && dir.existsSync()) dir.deleteSync(recursive: true);
+    dir.createSync(recursive: true);
+    for (final f in res.files) {
+      if (f.path == null) continue;
+      final name = "${DateTime.now().microsecondsSinceEpoch}_${p.basename(f.path!)}";
+      await File(f.path!).copy(p.join(dir.path, name));
+    }
+    await FilePicker.platform.clearTemporaryFiles();
+    return dir.path;
+  }
+
+  /// Pick a folder on the phone (e.g. Pictures/Wallpapers). Needs photo
+  /// permission to read the images inside. Returns null if it can't be read.
+  static Future<String?> pickFolder() async {
+    if (!await ensurePhotoPermission()) return null;
+    final d = await FilePicker.platform.getDirectoryPath();
+    if (d == null) return null;
+    try {
+      final ok = Directory(d).listSync().any(
+          (e) => e is File && _imageExt.contains(p.extension(e.path).toLowerCase()));
+      return ok ? d : null;
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
 class SettingsJukesworthSection extends StatelessWidget {
   const SettingsJukesworthSection({super.key});
 
@@ -232,6 +284,11 @@ class SettingsJukesworthSection extends StatelessWidget {
                 children: [
                   Button.secondary(
                     onPressed: () async {
+                      if (Platform.isAndroid || Platform.isIOS) {
+                        final d = await JukesMobilePicker.pickImages(replace: true);
+                        if (d != null) bg.update(path: d, enabled: true);
+                        return;
+                      }
                       final f = await openFile(acceptedTypeGroups: const [
                         XTypeGroup(
                           label: "Images",
@@ -242,10 +299,34 @@ class SettingsJukesworthSection extends StatelessWidget {
                       ]);
                       if (f != null) bg.update(path: f.path, enabled: true);
                     },
-                    child: const Text("Choose image"),
+                    child: Text(Platform.isAndroid || Platform.isIOS
+                        ? "Choose image(s)"
+                        : "Choose image"),
                   ),
                   Button.secondary(
                     onPressed: () async {
+                      if (Platform.isAndroid || Platform.isIOS) {
+                        final d = await JukesMobilePicker.pickFolder();
+                        if (d != null) {
+                          bg.update(path: d, enabled: true);
+                        } else if (context.mounted) {
+                          showDialog(
+                            context: context,
+                            builder: (c) => m.AlertDialog(
+                              title: const Text("Couldn't read that folder"),
+                              content: const Text(
+                                  "Allow photo access for Jukesworth, or use \"Choose image(s)\" and select several pictures instead."),
+                              actions: [
+                                m.TextButton(
+                                  onPressed: () => Navigator.pop(c),
+                                  child: const Text("OK"),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return;
+                      }
                       final d = await getDirectoryPath();
                       if (d != null) bg.update(path: d, enabled: true);
                     },
@@ -292,6 +373,15 @@ class SettingsJukesworthSection extends StatelessWidget {
                 ),
               ],
               const Divider(),
+              if (!YtDlpBackup.available &&
+                  (Platform.isAndroid || Platform.isIOS))
+                const m.ListTile(
+                  leading: Icon(m.Icons.info_outline),
+                  title: Text("Playback engine: built-in sources"),
+                  subtitle: Text(
+                      "yt-dlp isn't available on phones, so the source tester checks the built-in sources and falls back between matches."),
+                )
+              else
               StatefulBuilder(
                 builder: (context, setSt) => m.SwitchListTile(
                   value: SourceTester.preferYtDlp,

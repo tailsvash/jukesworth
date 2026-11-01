@@ -1,0 +1,8 @@
+# Jukesworth Android launcher icon: dart run flutter_launcher_icons -f flutter_launcher_icons-jukesworth.yaml
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/branding/spotube-logo.png"
+  adaptive_icon_background: "#010816"
+  adaptive_icon_foreground: "assets/branding/jukesworth-android-foreground.png"
+  min_sdk_android: 21

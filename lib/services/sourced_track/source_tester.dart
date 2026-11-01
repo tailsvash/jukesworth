@@ -31,6 +31,9 @@ class SourceTester {
   static final notice = ValueNotifier<String?>(null);
 
   static String get logFilePath {
+    if (Platform.isAndroid || Platform.isIOS) {
+      return join(Directory.systemTemp.path, "jukesworth", "source_tester.log");
+    }
     final xdg = Platform.environment["XDG_STATE_HOME"];
     final home = Platform.environment["HOME"] ?? ".";
     final base = (xdg != null && xdg.isNotEmpty)
